@@ -1,0 +1,31 @@
+{% extends "users/friends/friends_default.html" %}
+
+{% block friends %}
+    {% if list_to_me_invite %}
+        <ul class="friends-list">
+            {% for friend in list_to_me_invite %}
+                <li>
+                    <div class="friend-item">
+                        <span class="friend-name">{{ friend }}</span>
+                    </div>
+                </li>
+                <li>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div>
+                            <input name="user_id" value="{{ friend }}" hidden>
+                        </div>
+                        <ol>
+                            <input type="submit" name="apply" value="true">
+                        </ol>
+                        <ol>
+                            <input type="submit" name="apply" value="false">
+                        </ol>
+                    </form>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Вас пока никто не добавлял в друзья.</p>
+    {% endif %}
+{% endblock %}

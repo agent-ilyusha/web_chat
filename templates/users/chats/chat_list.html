@@ -1,0 +1,123 @@
+{% extends "home.html" %}
+
+{% block title %}Список чатов{% endblock %}
+
+{% block content %}
+<div class="chat-list-container">
+    <h2>Список пользователей</h2>
+    
+    <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Поиск пользователей...">
+    </div>
+    
+    <div class="users-list">
+        {% for user in users %}
+        <div class="user-item">
+            <div class="user-info">
+                <span class="username">{{ user.username }}</span>
+                <span class="online-status {% if user.is_online %}online{% else %}offline{% endif %}">
+                    {{ user.is_online|yesno:"Онлайн,Оффлайн" }}
+                </span>
+            </div>
+            <a href="{% url 'chat' user.username %}" class="start-chat-btn">Начать чат</a>
+        </div>
+        {% empty %}
+        <p>Нет доступных пользователей для чата.</p>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .chat-list-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .search-box {
+        margin-bottom: 20px;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 16px;
+    }
+    
+    .users-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .user-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px;
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        transition: transform 0.2s ease;
+    }
+    
+    .user-item:hover {
+        transform: translateY(-2px);
+    }
+    
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .username {
+        font-weight: bold;
+        font-size: 18px;
+    }
+    
+    .online-status {
+        font-size: 14px;
+        color: #666;
+    }
+    
+    .online-status.online {
+        color: #4caf50;
+    }
+    
+    .online-status.offline {
+        color: #f44336;
+    }
+    
+    .start-chat-btn {
+        background-color: #4a90e2;
+        color: white;
+        padding: 8px 16px;
+        border-radius: 4px;
+        text-decoration: none;
+        transition: background-color 0.3s ease;
+    }
+    
+    .start-chat-btn:hover {
+        background-color: #357abd;
+    }
+</style>
+
+<script>
+    document.getElementById('searchInput').addEventListener('input', function(e) {
+        const searchText = e.target.value.toLowerCase();
+        const userItems = document.querySelectorAll('.user-item');
+        
+        userItems.forEach(item => {
+            const username = item.querySelector('.username').textContent.toLowerCase();
+            if (username.includes(searchText)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+    });
+</script>
+{% endblock %} 

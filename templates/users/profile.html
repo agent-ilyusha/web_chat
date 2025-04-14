@@ -1,0 +1,23 @@
+{% extends "home.html" %}
+{% block title %}Профиль пользователя{% endblock %}
+
+{% block content %}
+    <div>
+        <p>
+            <label>Ник: {{ login_name }}</label>
+        </p>
+        <p>
+            <label>Id: {{ name }}</label>
+        </p>
+        <div>
+            <table>
+                <tr>
+                    <td><p>Друзья:</p></td>
+                    {% for friend in friends %}
+                    <td><label>{{ friend }}</label></td>
+                    {% endfor %}
+                </tr>
+            </table>
+        </div>
+    </div>
+{% endblock %}

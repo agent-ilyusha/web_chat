@@ -1,0 +1,20 @@
+{% extends "users/friends/friends_default.html" %}
+
+{% block friends %}
+    <h2>Ваши друзья</h2>
+
+    {% if list_friends %}
+        <ul class="friends-list">
+            {% for friend in list_friends %}
+                <li>
+                    <div class="friend-item">
+                        <span class="friend-name">{{ friend }}</span>
+                        <a href="/chats/{{ friend.id }}" class="message-btn">Написать сообщение</a>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>У вас пока нет друзей.</p>
+    {% endif %}
+{% endblock %}

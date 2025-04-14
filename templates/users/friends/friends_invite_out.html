@@ -1,0 +1,17 @@
+{% extends "users/friends/friends_default.html" %}
+
+{% block friends %}
+    {% if list_your_invite %}
+        <ul class="friends-list">
+            {% for friend in list_your_invite %}
+                <li>
+                    <div class="friend-item">
+                        <span class="friend-name">{{ friend }}</span>
+                    </div>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Вы пока не отправляли заявок в друзья.</p>
+    {% endif %}
+{% endblock %}

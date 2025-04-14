@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>registration</title>
+</head>
+<body>
+    <div>
+        {% if error_msg %}
+            <div>{{ error_msg }}</div>
+        {% endif %}
+        <div>
+            <form method="post">
+                <div>
+                    <div>
+                        {% csrf_token %}
+                    </div>
+                    <div>
+                        {% if form.non_field_errors %}
+                            <div class="form-error">{{ form.non_field_errors }}</div>
+                        {% endif %}
+                        {% for f in form %}
+                        <div>
+                             <p><label class="form-label" for="{{ f.id_for_label }}">{{f.label}}: </label>{{ f }}</p>
+                            {% if f.errors %}
+                                <div class="form-error">{{ f.errors }}</div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <table>
+                        <tr>
+                            <td>
+                                <div><button type="submit" class="def_acc_but">Регистрация</button></div>
+                            </td>
+                            <td>
+                                <div><button class="def_acc_but" onclick="window.location.href='http://127.0.0.1:8000/login'">Вход</button></div>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

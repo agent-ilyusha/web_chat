@@ -1,0 +1,30 @@
+{% extends "home.html" %}
+
+{% block title %}Список друзей{% endblock %}
+
+{% block content %}
+<div class="friends-container">
+    {% if user.is_authenticated %}
+        <div class="add-friend">
+            <h3>Добавить друга</h3>
+            <form method="post">
+                {% csrf_token %}
+                <input type="text" name="user_id" placeholder="ID пользователя/Короткое имя">
+                <button type="submit">Добавить</button>
+            </form>
+        </div>
+        <div class="buttons">
+            <form method="post">
+                {% csrf_token %}
+                <a><button name="name_but" value="friend">Друзья</button></a>
+                <a><button name="name_but" value="input">Входящие приглашения</button></a>
+                <a><button name="name_but" value="output">Исходящие приглашения</button></a>
+            </form>
+        </div>
+        <div>
+            {% block friends %}
+            {% endblock %}
+        </div>
+    {% endif %}
+</div>
+{% endblock %} 

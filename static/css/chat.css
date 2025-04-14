@@ -1,0 +1,224 @@
+/* Основные стили для чата */
+.chats-container {
+    display: flex;
+    height: calc(100vh - 100px);
+    background-color: #f5f5f5;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+
+/* Стили для списка чатов */
+.chat-list {
+    width: 300px;
+    background-color: #fff;
+    border-right: 1px solid #e0e0e0;
+    overflow-y: auto;
+}
+
+.chat-list h2 {
+    padding: 20px;
+    margin: 0;
+    font-size: 1.5em;
+    color: #333;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.chat-item {
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.chat-item:hover {
+    background-color: #f8f9fa;
+}
+
+.chat-item.active {
+    background-color: #e3f2fd;
+}
+
+.chat-preview {
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-name {
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.last-message {
+    font-size: 0.9em;
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Стили для окна чата */
+.chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fff;
+}
+
+.chat-header {
+    padding: 20px;
+    border-bottom: 1px solid #e0e0e0;
+    background-color: #fff;
+}
+
+.chat-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.2em;
+}
+
+/* Стили для сообщений */
+.messages-container {
+    flex: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: #f5f5f5;
+}
+
+.message {
+    max-width: 70%;
+    margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.my-message {
+    margin-left: auto;
+}
+
+.their-message {
+    margin-right: auto;
+}
+
+.message-content {
+    padding: 12px 16px;
+    border-radius: 15px;
+    font-size: 0.95em;
+    line-height: 1.4;
+}
+
+.my-message .message-content {
+    background-color: #007bff;
+    color: white;
+    border-top-right-radius: 5px;
+}
+
+.their-message .message-content {
+    background-color: #e9ecef;
+    color: #333;
+    border-top-left-radius: 5px;
+}
+
+.message-info {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 5px;
+    font-size: 0.8em;
+    color: #666;
+}
+
+.username {
+    font-weight: 600;
+}
+
+.timestamp {
+    color: #999;
+}
+
+/* Стили для ввода сообщений */
+.message-input {
+    padding: 20px;
+    background-color: #fff;
+    border-top: 1px solid #e0e0e0;
+}
+
+.message-input form {
+    display: flex;
+    gap: 10px;
+}
+
+.message-input input {
+    flex: 1;
+    padding: 12px 15px;
+    border: 1px solid #e0e0e0;
+    border-radius: 20px;
+    font-size: 1em;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.message-input input:focus {
+    border-color: #007bff;
+}
+
+.message-input button {
+    padding: 12px 25px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
+
+.message-input button:hover {
+    background-color: #0056b3;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Стили для пустого состояния */
+.empty-chat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    color: #666;
+    text-align: center;
+    padding: 20px;
+}
+
+.empty-chat h3 {
+    margin-bottom: 10px;
+    color: #333;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .chats-container {
+        flex-direction: column;
+        height: calc(100vh - 60px);
+    }
+
+    .chat-list {
+        width: 100%;
+        height: 200px;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+    }
+
+    .chat-window {
+        height: calc(100% - 200px);
+    }
+} 
