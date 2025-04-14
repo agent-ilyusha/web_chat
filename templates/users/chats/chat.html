@@ -1,48 +1,69 @@
-{% extends 'home.html' %}
+{% extends "home.html" %}
+{% load static %}
 
-{% block title %}Чат с {{ other_user.username }}{% endblock %}
+{% block title %}Сообщения{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/chat.css' %}">
+<meta name="current-user" content="{{ request.user.username }}">
+<meta name="chat-user" content="{{ current_chat_user }}">
+{% endblock %}
+
 {% block content %}
 <div class="chats-container">
     <div class="chat-list">
-        <h3>Чаты</h3>
-        <div class="users-list">
-            {% for user in users %}
-            <div class="user-item">
-                <div class="user-info">
-                    <span class="username">{{ user.username }}</span>
-                    <span class="online-status {% if user.is_online %}online{% else %}offline{% endif %}">
-                        {{ user.is_online|yesno:"Онлайн,Оффлайн" }}
-                    </span>
-                </div>
-                <a href="{% url 'chat' user.username %}" class="start-chat-btn">Чат</a>
+        <h2>Диалоги</h2>
+        
+        {% if chats %}
+            <ul>
+                {% for chat in chats %}
+                    <li class="chat-item {% if chat.id == current_chat_id %}active{% endif %}">
+                        <a href="/chats/{{ chat.user_name }}_{{ request.user.username }}">
+                            <div class="chat-preview">
+                                <span class="chat-name">{{ chat.user_name }}</span>
+                                <span class="last-message">{{ chat.last_message|truncatechars:30 }}</span>
+                            </div>
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <div class="empty-chat">
+                <h3>У вас нет активных чатов</h3>
+                <p>Начните общение с друзьями</p>
             </div>
-            {% endfor %}
-        </div>
+        {% endif %}
     </div>
     
+    {% if current_chat_id %}
     <div class="chat-window">
         <div class="chat-header">
-            <h2>Чат с {{ other_user.username }}</h2>
-            <span class="online-status {% if other_user.is_online %}online{% else %}offline{% endif %}">
-                {{ other_user.is_online|yesno:"Онлайн,Оффлайн" }}
-            </span>
+            <h3>Чат с {{ current_chat_user }}</h3>
         </div>
         
-        <div class="messages-container" id="messages">
-            {% for message in messages %}
-            <div class="message {% if message.sender == request.user %}my-message{% else %}their-message{% endif %}">
-                <div class="message-content">{{ message.content }}</div>
-                <div class="message-time">{{ message.timestamp|date:"H:i" }}</div>
-            </div>
-            {% endfor %}
+        <div class="messages-container" id="chat-messages">
+            <!-- Сообщения будут добавляться здесь через JavaScript -->
         </div>
         
         <div class="message-input">
             <form id="message-form">
-                <input type="text" id="message-input" placeholder="Введите сообщение...">
+                <input type="hidden" name="chat_id" value="{{ current_chat_id }}">
+                <input type="text" id="message-text" placeholder="Введите сообщение...">
                 <button type="submit">Отправить</button>
             </form>
         </div>
     </div>
+    {% else %}
+    <div class="chat-window">
+        <div class="empty-chat">
+            <h3>Выберите чат</h3>
+            <p>Выберите диалог из списка слева или начните новый</p>
+        </div>
+    </div>
+    {% endif %}
 </div>
-{% endblock %} 
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/chat.js' %}"></script>
+{% endblock %}
