@@ -1,6 +1,5 @@
 import json
 import os
-from datetime import datetime
 
 from channels.generic.websocket import AsyncWebsocketConsumer
 from django.contrib.auth import get_user_model

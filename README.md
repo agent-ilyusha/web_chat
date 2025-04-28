@@ -1,0 +1,1 @@
+Запуск приложения: daphne vits.asgi:application

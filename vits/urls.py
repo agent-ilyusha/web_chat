@@ -23,11 +23,16 @@ from users_profile.views import (
     logout_view,
     profile,
     friends,
-    chat_list,
-    chat,
     home,
 )
+from chat.views import (
+    chat,
+    chat_list
+)
 
+from video_message.views import (
+    view_offer
+)
 
 urlpatterns = [
     path('', home, name='home'),
@@ -39,4 +44,5 @@ urlpatterns = [
     path('friends/', friends, name='friends'),
     path('chats/', chat_list, name='chat_list'),
     path('chats/<str:room_name>/', chat, name='chat'),
+    path('video_chat/', view_offer, name='offer_url'),
 ]
