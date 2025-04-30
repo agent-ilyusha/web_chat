@@ -26,7 +26,7 @@
                     {{ user.is_online|yesno:"Онлайн,Оффлайн" }}
                 </span>
             </div>
-            <a href="{% url 'offer_url' %}" class="start-chat-btn">Начать звонок</a>
+            <a href="{% url 'chat_room' user.username%}" class="start-chat-btn">Начать звонок</a>
             <a href="{% url 'chat' user.username %}" class="start-chat-btn">Начать чат</a>
         </div>
         {% empty %}

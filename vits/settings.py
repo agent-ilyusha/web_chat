@@ -9,7 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
-
+from django.conf.global_settings import SECURE_CROSS_ORIGIN_OPENER_POLICY
 from dotenv import load_dotenv
 from pathlib import Path
 from os import getenv, path
@@ -29,7 +29,10 @@ SECRET_KEY = getenv("DJANGO_SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.0.109',
+                 '127.0.0.1',
+                 'localhost',
+                 ]
 
 
 # Application definition
@@ -45,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'users_profile',
+    'video_message',
     'rest_framework',
     'rest_framework.authtoken',
     'rest_framework_simplejwt',
@@ -150,6 +154,9 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 
 USE_TZ = True
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = None
+SESSION_COOKIE_SECURE = False
 
 
 # Static files (CSS, JavaScript, Images)
