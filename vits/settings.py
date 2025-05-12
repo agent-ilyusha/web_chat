@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 from django.conf.global_settings import SECURE_CROSS_ORIGIN_OPENER_POLICY
 from dotenv import load_dotenv
 from pathlib import Path
-from os import getenv, path
+from os import getenv
 
 load_dotenv()
 
@@ -32,6 +32,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['192.168.0.109',
                  '127.0.0.1',
                  'localhost',
+                 '26.48.222.192',
                  ]
 
 

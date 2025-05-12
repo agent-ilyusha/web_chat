@@ -1,1 +1,1 @@
-Запуск приложения: daphne vits.asgi:application
+Запуск приложения: `daphne vits.asgi:application`

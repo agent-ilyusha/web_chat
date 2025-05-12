@@ -1,80 +1,138 @@
-import asyncio
 import json
 import logging
 
+from collections import defaultdict
+
 from asgiref.sync import sync_to_async
-from django.http import HttpResponse, JsonResponse
-from django.shortcuts import render
+from django.core.handlers.asgi import ASGIRequest
+from django.http import JsonResponse, HttpResponseBadRequest, HttpResponse, HttpResponseRedirect
+from django.shortcuts import render, redirect
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
-from aiortc import RTCPeerConnection, RTCSessionDescription
-from aiortc.contrib.media import MediaRelay
 
 logger = logging.getLogger(__name__)
-pcs = set()
-relay = MediaRelay()
+rooms = defaultdict(dict)
+
+
+@sync_to_async
+def check_auth(request: ASGIRequest) -> bool:
+    """
+    Check authentication user.
+    :param request:
+    :return: boolean
+    """
+    return request.user.is_authenticated
+
+
+@sync_to_async
+def create_rooms(request: ASGIRequest, room_name: str) -> str:
+    """
+    Create room name.
+    :param request:
+    :param room_name:
+    :return: room name
+    """
+    return f'{room_name}_{request.user.username}'
+
+
+@sync_to_async
+def async_render(request: ASGIRequest, context: dict, url: str) -> HttpResponse:
+    return render(request, url, context)
+
+
+@sync_to_async
+def async_redirect(url: str) -> HttpResponseRedirect:
+    return redirect(url)
 
 
 @csrf_exempt
-async def chat_room(request, room_name):
+@require_http_methods(["POST", "GET"])
+async def signaling(request: ASGIRequest, room_name):
+    """
+    Main view for video signaling.
+    :param request:
+    :param room_name:
+    :return:
+    """
+    """
+    Field in POST request.
+    - room_id: room id.
+    - role: 'offer' or 'answer'
+    - sdp: SDP offer/answer (optional)
+    - type: type SDP (optional)
+    - candidate: ICE-candidate (optional)
+    - sdpMid, sdpMLineIndex: for ICE-candidate (optional)
+    """
+    auth = await check_auth(request)
+    if not auth:
+        val = await async_redirect('/login/')
+        return val
+
+    room_true = await create_rooms(request, room_name)
     if request.method == 'GET':
         context = {
-            'chat_room_id': room_name,
+            'room_id': room_true,
         }
-        val = await sync_to_async(render)(request,
-                                          'users/video_chats/room.html',
-                                          context,
-                                          content_type='text/html',
-                                          status=200,
-                                          using=None)
+        val = await async_render(request,
+                                 context,
+                                 'users/video_chats/room.html')
         return val
-    elif request.method == 'POST':
-        val = await offer(request)
-        return JsonResponse(val)
+    data = json.loads(request.body)
+    room_id = data.get("room_id")
+    role = data.get("role")
 
+    if not room_id or role not in ("offer", "answer"):
+        return HttpResponseBadRequest("room_id и role обязательны")
 
-async def offer(request):
-    params = json.loads(request.body)
-    offer_val = RTCSessionDescription(sdp=params["sdp"], type=params["type"])
+    room = rooms[room_id]
+    if room_true != room:
+        return HttpResponseBadRequest("Это не ваша комната!")
 
-    pc = RTCPeerConnection()
-    pcs.add(pc)
+    if "candidate" in data:
+        candidate = {
+            "candidate": data["candidate"],
+            "sdpMid": data.get("sdpMid"),
+            "sdpMLineIndex": data.get("sdpMLineIndex"),
+        }
+        key = f"{role}_candidates"
+        room.setdefault(key, []).append(candidate)
+        return JsonResponse({"result": "candidate saved"})
 
-    @pc.on("connectionstatechange")
-    async def on_connectionstatechange():
-        if pc.connectionState == "failed":
-            await pc.close()
-            pcs.discard(pc)
+    if "sdp" in data and "type" in data:
+        sdp_obj = {
+            "sdp": data["sdp"],
+            "type": data["type"]
+        }
+        room[role] = sdp_obj
+        return JsonResponse({"result": f"{role} saved"})
 
-    @pc.on("track")
-    def on_track(track):
-        if track.kind == "audio":
-            pc.addTrack(relay.subscribe(track))
-        elif track.kind == "video":
-            pc.addTrack(relay.subscribe(track))
-
-        @track.on("ended")
-        async def on_ended():
-            logger.info("Track %s ended", track.kind)
-
-    # Устанавливаем удаленное описание
-    await pc.setRemoteDescription(offer_val)
-
-    # Создаем ответ
-    answer = await pc.createAnswer()
-    await pc.setLocalDescription(answer)
-
-    return {
-        "sdp": pc.localDescription.sdp,
-        "type": pc.localDescription.type
-    }
+    if role == "offer":
+        answer = room.get("answer")
+        answer_candidates = room.get("answer_candidates", [])
+        return JsonResponse({
+            "answer": answer,
+            "candidates": answer_candidates
+        })
+    else:
+        offer = room.get("offer")
+        offer_candidates = room.get("offer_candidates", [])
+        return JsonResponse({
+            "offer": offer,
+            "candidates": offer_candidates
+        })
 
 
 @csrf_exempt
-async def close_room(request, room_name):
-    # Закрываем все соединения
-    coros = [pc.close() for pc in pcs]
-    await asyncio.gather(*coros)
-    pcs.clear()
-
-    return HttpResponse("OK")
+@require_http_methods(["POST"])
+async def clear_room(request, room_name):
+    """
+    Clear room after close.
+    :param request:
+    :param room_name: room id
+    :return:
+    """
+    data = json.loads(request.body)
+    room_id = data.get("room_id")
+    if room_id in rooms:
+        del rooms[room_id]
+    return JsonResponse({"result": "room cleared"})

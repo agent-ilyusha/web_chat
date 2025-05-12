@@ -31,22 +31,20 @@ from chat.views import (
 )
 
 from video_message.views import (
-    chat_room,
-    close_room,
-    offer
+    clear_room,
+    signaling
 )
 
 urlpatterns = [
     path('', home, name='home'),
     path('admin/', admin.site.urls),
     path('login/', LoginUser.as_view(), name='login'),
-    path('registration/', Registration.as_view(), name='users'),
+    path('registration/', Registration.as_view(), name='registration'),
     path('logout/', logout_view, name='logout'),
     path('profile/', profile, name='profile'),
     path('friends/', friends, name='friends'),
     path('chats/', chat_list, name='chat_list'),
     path('chats/<str:room_name>/', chat, name='chat'),
-    path('video_chat/<str:room_name>/', chat_room, name='chat_room'),
-    path('close/<str:room_name>/', close_room, name='close_room'),
-    path('video_chat/<str:room_name>/', offer, name='offer'),
+    path('video_chat/<str:room_name>/', signaling, name='chat_room'),
+    path('close/<str:room_name>/', clear_room, name='close_room'),
 ]

@@ -6,7 +6,6 @@ from django.contrib.auth.views import LoginView
 from django.core.handlers.wsgi import WSGIRequest
 from django.shortcuts import redirect, render
 from django.views.generic import CreateView
-from django.contrib.auth.decorators import login_required
 
 from users_profile.forms import RegistrationUserForm, LoginUserForm
 from users_profile.models import UserToUser, User, InviteToFriend
@@ -48,10 +47,12 @@ def invite_to_friends(request: WSGIRequest):
     username = request.POST.get("user_id")
     if username == request.user.username:
         return redirect("/friends/")
-    user = User.objects.get(username=username)
-    take_id = InviteToFriend.objects.filter(user_first=user, user_second=request.user)
-    if not take_id[0]:
-        InviteToFriend.objects.create(user_first=request.user, user_second=user)
+    if User.objects.filter(username=username).exists():
+        user = User.objects.get(username=username)
+        take_id = InviteToFriend.objects.filter(user_first=user, user_second=request.user)
+        if not take_id:
+            InviteToFriend.objects.create(user_first=request.user, user_second=user)
+
     return redirect("/friends/")
 
 
@@ -153,6 +154,7 @@ def friends(request: WSGIRequest):
     )
 
 
-@login_required
 def home(request):
-    return render(request, 'home.html')
+    if request.user.is_authenticated:
+        return redirect("/profile/")
+    return redirect("/login/")

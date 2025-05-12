@@ -1,103 +1,200 @@
-        let pc = null;
-        let localStream = null;
-        const localVideo = document.getElementById('localVideo');
-        const remoteVideo = document.getElementById('remoteVideo');
-        const startButton = document.getElementById('startButton');
-        const callButton = document.getElementById('callButton');
-        const hangupButton = document.getElementById('hangupButton');
+document.addEventListener('DOMContentLoaded', function () {
 
-        // Конфигурация ICE серверов
-        const configuration = {
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' }
-            ]
-        };
+    let localStream = null;
+    let pc = null;
+    let roomId = null;
+    let role = null;
+    let polling = false;
 
-        startButton.onclick = async () => {
+    const startBtn = document.getElementById('startButton');
+    const callBtn = document.getElementById('callButton');
+    const joinBtn = document.getElementById('joinButton');
+    const hangupBtn = document.getElementById('hangupButton');
+    const localVideo = document.getElementById('localVideo');
+    const remoteVideo = document.getElementById('remoteVideo');
+    const roomIdInput = document.getElementById('roomId');
+
+    startBtn.onclick = async () => {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+                video: true
+            });
+        } catch (e) {
+            // Если камера не доступна, пробуем только аудио
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({
                     audio: true,
-                    video: true
+                    video: false
                 });
-                localVideo.srcObject = localStream;
-                startButton.disabled = true;
-                callButton.disabled = false;
-            } catch (e) {
-                console.error('Ошибка доступа к медиа устройствам:', e);
+                alert("Камера не найдена или не разрешена. Используется только микрофон.");
+            } catch (err) {
+                alert("Нет доступа к микрофону и камере!");
+                return;
             }
-        };
+        }
+        localVideo.srcObject = localStream;
+        startBtn.disabled = true;
+        callBtn.disabled = false;
+        joinBtn.disabled = false;
+    };
 
-        callButton.onclick = async () => {
-            try {
-                callButton.disabled = true;
-                hangupButton.disabled = false;
+    callBtn.onclick = async () => {
+        roomId = roomIdInput.value.trim();
+        if (!roomId) {
+            alert("Введите room_id!");
+            return;
+        }
+        role = "offer";
+        callBtn.disabled = true;
+        joinBtn.disabled = true;
+        hangupBtn.disabled = false;
 
-                pc = new RTCPeerConnection(configuration);
+        pc = createPeerConnection();
 
-                // Добавляем локальные треки в peer connection
-                localStream.getTracks().forEach(track => {
-                    pc.addTrack(track, localStream);
-                });
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
 
-                // Обработка входящих треков
-                pc.ontrack = event => {
-                    remoteVideo.srcObject = event.streams[0];
-                };
+        const offer = await pc.createOffer();
+        await pc.setLocalDescription(offer);
 
-                // Создаем и отправляем offer
-                const offer = await pc.createOffer();
-                await pc.setLocalDescription(offer);
-                let url = document.location.pathname;
-                const response = await fetch(url, {
+        await fetch(document.location.pathname, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                room_id: roomId,
+                role: "offer",
+                sdp: offer.sdp,
+                type: offer.type
+            })
+        });
+
+        polling = true;
+        pollSignals();
+    };
+
+    joinBtn.onclick = async () => {
+        roomId = roomIdInput.value.trim();
+        if (!roomId) {
+            alert("Введите room_id!");
+            return;
+        }
+        role = "answer";
+        callBtn.disabled = true;
+        joinBtn.disabled = true;
+        hangupBtn.disabled = false;
+
+        pc = createPeerConnection();
+        localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+
+        let offerData = null;
+        while (!offerData) {
+            const resp = await fetch(document.location.pathname, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    room_id: roomId,
+                    role: "answer"
+                })
+            });
+            const data = await resp.json();
+            if (data.offer) {
+                offerData = data.offer;
+                break;
+            }
+            await new Promise(r => setTimeout(r, 1000));
+        }
+
+        await pc.setRemoteDescription(new RTCSessionDescription(offerData));
+
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+
+        await fetch(document.location.pathname, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                room_id: roomId,
+                role: "answer",
+                sdp: answer.sdp,
+                type: answer.type
+            })
+        });
+
+        polling = true;
+        pollSignals();
+    };
+
+    hangupBtn.onclick = async () => {
+        polling = false;
+        if (pc) pc.close();
+        pc = null;
+        localVideo.srcObject = null;
+        remoteVideo.srcObject = null;
+        startBtn.disabled = false;
+        callBtn.disabled = true;
+        joinBtn.disabled = true;
+        hangupBtn.disabled = true;
+        if (roomId) {
+            await fetch(`/close/${document.location.pathname.split('/')[2]}/`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({room_id: roomId})
+            });
+        }
+    };
+
+    function createPeerConnection() {
+        const pc = new RTCPeerConnection({
+            iceServers: [{urls: 'stun:stun.l.google.com:19302'}]
+        });
+
+        pc.onicecandidate = async (event) => {
+            if (event.candidate) {
+                await fetch(document.location.pathname, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
-                        sdp: pc.localDescription.sdp,
-                        type: pc.localDescription.type
+                        room_id: roomId,
+                        role: role,
+                        candidate: event.candidate.candidate,
+                        sdpMid: event.candidate.sdpMid,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex
                     })
                 });
-
-                const answer = await response.json();
-                await pc.setRemoteDescription(new RTCSessionDescription(answer));
-
-            } catch (e) {
-                console.error('Ошибка при установке соединения:', e);
             }
         };
 
-        hangupButton.onclick = async () => {
-            if (pc) {
-                pc.close();
-                pc = null;
-            }
-            
-            if (localStream) {
-                localStream.getTracks().forEach(track => track.stop());
-                localStream = null;
-            }
-
-            localVideo.srcObject = null;
-            remoteVideo.srcObject = null;
-            
-            startButton.disabled = false;
-            callButton.disabled = true;
-            hangupButton.disabled = true;
-
-            try {
-                let url = `/close/${document.location.pathname.split('/')[2]}/`;
-                await fetch(url, {
-                    method: 'POST'
-                });
-            } catch (e) {
-                console.error('Ошибка при закрытии соединения:', e);
-            }
+        pc.ontrack = (event) => {
+            remoteVideo.srcObject = event.streams[0];
         };
 
-        // Обработка ошибок и закрытия соединения
-        window.onbeforeunload = () => {
-            if (pc) {
-                pc.close();
+        return pc;
+    }
+
+    async function pollSignals() {
+        while (polling) {
+            const resp = await fetch(document.location.pathname, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    room_id: roomId,
+                    role: role
+                })
+            });
+            const data = await resp.json();
+
+            if (role === "offer" && data.answer && pc.signalingState !== "stable") {
+                await pc.setRemoteDescription(new RTCSessionDescription(data.answer));
             }
-        };
+
+            if (data.candidates) {
+                for (const cand of data.candidates) {
+                    try {
+                        await pc.addIceCandidate(cand);
+                    } catch (e) {}
+                }
+            }
+            await new Promise(r => setTimeout(r, 1000));
+        }
+    }
+});

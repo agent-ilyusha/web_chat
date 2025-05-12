@@ -1,7 +1,7 @@
 {% extends "home.html" %}
 {% load static %}
 
-{% block title %}Список чатов{% endblock %}
+{% block title %}Звонок{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/video_chat.css' %}">
@@ -12,18 +12,22 @@
     {% csrf_token %}
     <div class="container">
         <div class="video-container">
-            <h2>Локальное видео</h2>
+            <h2>Вы</h2>
             <video id="localVideo" autoplay playsinline muted></video>
         </div>
         <div class="video-container">
-            <h2>Удаленное видео</h2>
+            <h2>Собеседник</h2>
             <video id="remoteVideo" autoplay playsinline></video>
         </div>
     </div>
 
     <div class="controls">
+        <label>
+            <input id="roomId" value="{{ room_id }}" hidden>
+        </label>
         <button id="startButton">Начать трансляцию</button>
         <button id="callButton" disabled>Позвонить</button>
+        <button id="joinButton" disabled>Присоединиться</button>
         <button id="hangupButton" class="danger" disabled>Завершить</button>
     </div>
     {% block extra_js %}

@@ -5,7 +5,6 @@ from users_profile.models import User
 from users_profile.views import get_friends
 
 
-@login_required
 def chat_list(request):
     if not request.user.is_authenticated:
         return redirect("/login/")
@@ -26,7 +25,6 @@ def chat_list(request):
     return render(request, 'users/chats/chat_list.html', context)
 
 
-@login_required
 def chat(request, room_name):
     if not request.user.is_authenticated:
         return redirect("/login/")
