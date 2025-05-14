@@ -38,9 +38,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         :return:
         """
         file_path = self.get_chat_file_path(room_name)
-        if file_path.exists():
-            with open(file_path, 'r', encoding='utf-8') as f:
-                return json.load(f)
+        if not file_path.exists():
+            val = open(file_path, 'w', encoding='utf-8')
+            val.write('[]')
+            val.close()
+
+
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return json.load(f)
 
     def save_message(self, room_name, message_data):
         """

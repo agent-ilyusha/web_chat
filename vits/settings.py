@@ -122,6 +122,14 @@ DATABASES = {
         'PASSWORD': getenv('POSTGRES_PASSWORD'),
         'HOST': getenv('POSTGRES_HOST'),
         'PORT': getenv('POSTGRES_PORT'),
+        'TEST': {
+            'ENGINE': 'django.db.backends.postgresql_psycopg2',
+            'NAME': 'vits_test',
+            'USER': getenv('postgres'),
+            'PASSWORD': getenv('postgres'),
+            'HOST': getenv('localhost'),
+            'PORT': getenv('5432'),
+        },
     }
 }
 
